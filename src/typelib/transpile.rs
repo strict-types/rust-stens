@@ -24,7 +24,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use std::io::Sink;
 
-use amplify::confinement::Confined;
+use amplify::confinement::{Collection, Confined};
 use amplify::Wrapper;
 use strict_encoding::{
     DefineEnum, DefineStruct, DefineTuple, DefineUnion, FieldName, LibName, Primitive, Sizing,
@@ -51,6 +51,7 @@ pub struct LibBuilder {
     pub(super) known_libs: BTreeSet<Dependency>,
     pub(super) extern_types: BTreeMap<LibName, BTreeMap<SemId, TypeName>>,
     pub(super) types: BTreeMap<TypeName, Ty<TranspileRef>>,
+    pub(super) roots: BTreeSet<TypeName>,
     last_compiled: Option<TranspileRef>,
 }
 
@@ -64,12 +65,15 @@ impl LibBuilder {
             known_libs: known_libs.into_iter().collect(),
             extern_types: empty!(),
             types: empty!(),
+            roots: empty!(),
             last_compiled: None,
         }
     }
 
-    pub fn transpile<T: StrictEncode + StrictDumb>(self) -> Self {
-        T::strict_dumb().strict_encode(self).expect("memory encoding doesn't error")
+    pub fn transpile<T: StrictEncode + StrictDumb>(mut self) -> Self {
+        self.roots.push(T::strict_name().expect("transpiled types must be named"));
+        self = T::strict_dumb().strict_encode(self).expect("memory encoding doesn't error");
+        self
     }
 
     fn dependency_id(&self, lib_name: &LibName) -> TypeLibId {

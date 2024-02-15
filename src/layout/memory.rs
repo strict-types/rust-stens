@@ -26,7 +26,7 @@ use std::fmt::{Display, Formatter};
 use amplify::confinement::LargeVec;
 use strict_encoding::STRICT_TYPES_LIB;
 
-use super::vesper::TypeVesper;
+use super::vesper::VesperType;
 use crate::typesys::{TypeInfo, TypeTree};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
@@ -61,7 +61,7 @@ impl Display for MemoryLayout {
 impl MemoryLayout {
     fn new() -> Self { Self { items: empty!() } }
 
-    pub fn to_vesper(&self) -> TypeVesper {
+    pub fn to_vesper(&self) -> VesperType {
         let mut root = None;
         let mut path: Vec<usize> = vec![];
         for item in &self.items {

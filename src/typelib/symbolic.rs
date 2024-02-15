@@ -23,7 +23,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{self, Display, Formatter};
 
-use amplify::confinement::{Confined, SmallOrdMap, TinyOrdMap, TinyOrdSet};
+use amplify::confinement::{Confined, SmallOrdMap, SmallOrdSet, TinyOrdMap, TinyOrdSet};
 use amplify::ByteArray;
 use encoding::{LibName, LIB_EMBEDDED};
 use sha2::Digest;
@@ -49,6 +49,7 @@ pub struct SymbolicLib {
     dependencies: TinyOrdSet<Dependency>,
     extern_types: ExternTypes,
     types: SmallOrdMap<TypeName, Ty<TranspileRef>>,
+    roots: SmallOrdSet<TypeName>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Display)]
@@ -178,8 +179,11 @@ pub enum TranspileError {
     /// too many dependencies.
     TooManyDependencies,
 
-    /// too many types
+    /// too many types.
     TooManyTypes,
+
+    /// too many types at the library root.
+    TooManyRootTypes,
 
     /// library `{0}` contains too many types.
     LibTooLarge(LibName),
@@ -187,8 +191,8 @@ pub enum TranspileError {
 
 impl LibBuilder {
     pub fn compile_symbols(self) -> Result<SymbolicLib, TranspileError> {
-        let (name, known_libs, extern_types, types) =
-            (self.lib_name, self.known_libs, self.extern_types, self.types);
+        let (name, known_libs, extern_types, types, roots) =
+            (self.lib_name, self.known_libs, self.extern_types, self.types, self.roots);
 
         for ty in types.values() {
             for (subty, _) in ty.type_refs() {
@@ -222,6 +226,7 @@ impl LibBuilder {
         let dependencies = Confined::try_from(used_dependencies)
             .map_err(|_| TranspileError::TooManyDependencies)?;
         let types = Confined::try_from(types).map_err(|_| TranspileError::TooManyTypes)?;
+        let roots = Confined::try_from(roots).map_err(|_| TranspileError::TooManyRootTypes)?;
         let extern_types = Confined::try_from(
             extern_types
                 .into_iter()
@@ -238,6 +243,7 @@ impl LibBuilder {
             extern_types,
             dependencies,
             types,
+            roots,
         })
     }
 
@@ -338,6 +344,7 @@ impl TypeLib {
             dependencies: self.dependencies.clone(),
             extern_types,
             types,
+            roots: empty!(),
         })
     }
 }

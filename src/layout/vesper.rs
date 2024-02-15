@@ -28,9 +28,25 @@ use amplify::num::u24;
 use encoding::{Ident, Sizing};
 use vesper::{AttrVal, Attribute, Expression, Predicate, TExpr};
 
-use crate::Cls;
+use crate::{Cls, SymbolicLib};
 
-pub type TypeVesper = TExpr<Pred>;
+#[derive(Wrapper, WrapperMut, Clone, Eq, PartialEq, Debug, From)]
+#[wrapper(Deref)]
+#[wrapper_mut(DerefMut)]
+pub struct VesperLib(Vec<VesperType>);
+
+impl SymbolicLib {
+    pub fn to_vesper(&self) -> VesperLib {
+        let mut types = Vec::with_capacity(self.roots().len());
+        for name in self.roots() {
+            let ty = self.types().get(name).expect("symbolic lib inconsistency");
+            types.push(ty.to_vesper())
+        }
+        VesperLib::from(types)
+    }
+}
+
+pub type VesperType = TExpr<Pred>;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display)]
 #[display(lowercase)]

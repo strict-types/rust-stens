@@ -76,6 +76,7 @@ impl From<TranspileError> for CompileError {
             TranspileError::UnknownLib(lib) => Self::UnknownLib(lib),
             TranspileError::TooManyDependencies => Self::TooManyDependencies,
             TranspileError::TooManyTypes => Self::TooManyTypes,
+            TranspileError::TooManyRootTypes => Self::TooManyTypes,
             TranspileError::LibTooLarge(lib) => Self::LibTooLarge(lib),
         }
     }

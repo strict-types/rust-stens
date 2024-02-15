@@ -24,13 +24,38 @@ use amplify::confinement::Confined;
 use encoding::constants::UNIT;
 use encoding::Ident;
 
-use super::vesper::{Attr, Pred, TypeVesper};
+use super::vesper::{Attr, Pred, VesperType};
 use crate::ast::ItemCase;
 use crate::typesys::{NestedCase, TypeInfo};
-use crate::Ty;
+use crate::{TranspileRef, Ty};
+
+impl Ty<TranspileRef> {
+    pub(super) fn to_vesper(&self, subject: Ident) -> VesperType {
+        let predicate = match self {
+            Ty::Primitive(_) => {}
+            Ty::UnicodeChar => {}
+            Ty::Enum(_) => {}
+            Ty::Union(_) => {}
+            Ty::Tuple(_) => {}
+            Ty::Struct(_) => {}
+            Ty::Array(_, _) => {}
+            Ty::List(_, _) => {}
+            Ty::Set(_, _) => {}
+            Ty::Map(_, _, _) => {}
+        };
+
+        VesperType {
+            subject,
+            predicate,
+            attributes,
+            content,
+            comment,
+        }
+    }
+}
 
 impl TypeInfo {
-    pub(super) fn to_vesper(&self) -> TypeVesper {
+    pub(super) fn to_vesper(&self) -> VesperType {
         let TypeInfo {
             ty,
             fqn,
@@ -126,7 +151,7 @@ impl TypeInfo {
             attributes.push(Attr::Tag(*pos));
         }
 
-        TypeVesper {
+        VesperType {
             subject,
             predicate,
             attributes: Confined::from_collection_unsafe(attributes),
